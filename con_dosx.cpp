@@ -22,6 +22,7 @@
 #include "sysdep.h"
 #include "console.h"
 #include "gui.h"
+#include "c_config.h"
 
 #include <stdlib.h>
 #include <process.h>
@@ -734,6 +735,13 @@ int ConScroll(int Way, int X, int Y, int W, int H, TAttr Fill, int Count)
 }
 
 int ConSetSize(int X, int Y) {
+    // explicitly turn off/on the mouse and reset it's boundaries at the
+    // same time. the turn off/on thing ensures the cursor doesn't disappear
+    // after the screen mode switch
+    MOUSCursen(FALSE);
+    plScnSetSize(X, Y);
+    MOUSSetBounds();
+    MOUSCursen(TRUE);
 	return 0;
 }
 
@@ -825,6 +833,7 @@ int ConInit(int XSize, int YSize)
 	if(Initialized) return 0;
 
 	EventBuf.What = evNone;
+    ConSetSize(XSize, YSize);
 	MousePresent	= MOUSInit();
 	ConContinue();
 	Initialized = 1;
@@ -949,6 +958,7 @@ int SaveScreen() {
 
 int RestoreScreen() {
 	if (SavedScreen) {
+        ConSetSize(SavedX, SavedY);
 		ConPutBox(0, 0, SavedX, SavedY, SavedScreen);
 		ConSetCursorPos(SaveCursorPosX, SaveCursorPosY);
 	}
@@ -959,9 +969,8 @@ int RestoreScreen() {
 GUI::GUI(int &argc, char **argv, int XSize, int YSize) {
 	fArgc = argc;
 	fArgv = argv;
-	::ConInit(-1, -1);
 	SaveScreen();
-	::ConSetSize(XSize, YSize);
+	::ConInit(XSize, YSize);
 	gui = this;
 #ifdef DJGPP
 	// speed up directory access by turning off unused stat functionality
@@ -976,6 +985,10 @@ GUI::GUI(int &argc, char **argv, int XSize, int YSize) {
 
 GUI::~GUI() {
 	RestoreScreen();
+    // HACK: clearing the screen to hide the fact that there's something
+    // screwy going on with the screen restore when using non-80x25 mode
+    // that i cannot pin down ...
+    ::ConClear();
 	::ConDone();
 
         if(SavedScreen)
@@ -1003,6 +1016,7 @@ int GUI::ShowEntryScreen() {
 	ConHideMouse();
 	RestoreScreen();
 	do { gui->ConGetEvent(evKeyDown, &E, -1, 1, 0); } while (E.What != evKeyDown);
+    ConSetSize(ScreenSizeX, ScreenSizeY);
 	ConShowMouse();
 	if (frames)
 		frames->Repaint();
@@ -1026,7 +1040,16 @@ int GUI::OpenPipe(char *Command, EModel *notify) {
             Pipes[i].notify = notify;
             Pipes[i].stopped = 1;
 
+            // when a long-ish running command gets run here, sometimes
+            // the mouse cursor disappears on returning from the command,
+            // so we turn it off/on here just to be safe
+            MOUSCursen(FALSE);
+
             Pipes[i].fp = xpopen(Command,"r");
+
+            MOUSSetBounds();
+            MOUSCursen(TRUE);
+
             if (Pipes[i].fp == NULL)
                 return -1;
             Pipes[i].used = 1;
@@ -1088,7 +1111,7 @@ int GUI::ClosePipe(int id) {
 }
 
 int GUI::RunProgram(int mode, char *Command) {
-	int rc, W, H, W1, H1;
+	int rc, W, H;
 
 	ConQuerySize(&W, &H);
 	ConHideMouse();
@@ -1103,11 +1126,14 @@ int GUI::RunProgram(int mode, char *Command) {
 
 	ConContinue();
 	ConShowMouse();
-	ConQuerySize(&W1, &H1);
 
-	if (W != W1 || H != H1) {
-		frames->Resize(W1, H1);
-	}
+    // HACK: there used to be conditional logic here to check if a screen
+    // resize was actually needed using another call to ConQuerySize() to
+    // check the current size... i might need to revisit this again, but
+    // i opted to just always resize and repaint to ensure a consistent
+    // screen state always.
+    ConSetSize(W, H);
+    frames->Resize(W, H);
 	frames->Repaint();
 	return rc;
 }

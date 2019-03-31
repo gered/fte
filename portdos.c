@@ -261,6 +261,41 @@ static void getCurInfo(void)
 
 
 /*
+ * plScnSetSize() sets the screen textmode to correspond to the specified
+ * dimensions. note that it only actually supports standard DOS textmodes
+ * 80x25, 80x43 and 80x50
+ */
+void plScnSetSize(int xSize, int ySize) {
+  union dosxReg r;
+
+  // set text mode
+  memset(&r, 0, sizeof(r));
+  r.w.ax = 0x0003;
+  dosxIntr(0x10, &r);
+
+  memset(&r, 0, sizeof(r));
+
+  if (xSize == 80 && ySize == 25) {
+    // the previous int 10h call already set 80x25. do nothing here
+  } else if (xSize == 80 && ySize == 43) {
+    // TODO: doesn't work? what is the correct way to set 8x14 font?
+    //       i know my video card supports this as i can use 80x43 in other
+    //       applications ... will revisit this
+    r.w.ax = 0x1122;
+    dosxIntr(0x10, &r);
+  } else if (xSize == 80 && ySize == 50) {
+    r.w.ax = 0x1112;
+    dosxIntr(0x10, &r);
+  }
+
+  //plScnI.s_inited = FALSE;
+  getType();
+  getSize();
+  getCurInfo();
+}
+
+
+/*
  *  plScnInit() is called to get most of the info required to do screen I/O.
  *  Depending on the "inited" flag it will get the current screen size, the
  *  mode, cursor shape and visibility etc.
@@ -955,6 +990,47 @@ boolean MOUSPressed(UWORD *x, UWORD *y)
 	return FALSE;
 }
 
+
+/*
+ * MOUSSetBounds() attempts to automatically set appropriate mouse cursor
+ * boundaries based on the current screen textmode.
+ * NOTE: This is currently written assuming 80 column text modes, with
+ *       the only possible screen heights being 25, 43 or 80.
+ */
+boolean MOUSSetBounds(void)
+{
+	union dosxReg r;
+    int rows;
+    int height;
+
+    rows = plScnHeight();
+
+    if (rows == 43) {
+        height = 350;
+    } else if (rows == 50) {
+        height = 400;
+    } else {
+        height = 200;
+    }
+
+	if(MousePresent)
+	{
+        memset(&r, 0, sizeof(r));
+		r.w.ax	= MC_SETXRANGE;
+		r.w.cx	= 0;
+		r.w.dx	= 639;
+		dosxIntr(0x33, &r);
+
+        memset(&r, 0, sizeof(r));
+        r.w.ax  = MC_SETYRANGE;
+        r.w.cx  = 0;
+        r.w.dx  = (height - 1);
+        dosxIntr(0x33, &r);
+
+        return TRUE;
+	}
+    return FALSE;
+}
 
 
 #endif          // DOS || DOSP32

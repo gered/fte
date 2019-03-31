@@ -192,6 +192,7 @@ void	MOUSSaveCurs(void);
 void	MOUSRestCurs(void);
 boolean MOUSIsPresent(void);
 ULONG	MOUSPressCount(void);
+boolean MOUSSetBounds(void);
 
 //** Timer calls
 //** ===========
@@ -246,6 +247,7 @@ void	plScnSetFlash(boolean on);
 void	plScnCursorOn(boolean on);
 void	plScnCursorShape(int start, int end);
 void	plScnCursorPos(int x, int y);
+void    plScnSetSize(int xSize, int ySize);
 
 
 //** Writing the screen.
