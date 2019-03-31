@@ -20,7 +20,7 @@
 #include "ftever.h"
 #include "sysdep.h"
 #include "feature.h"
-#include "c_fconfig.h"
+#include "c_fcon~1.h"
 #include "s_files.h"
 #include "c_mode.h"
 
@@ -40,7 +40,7 @@ long pos = 0;
 char XTarget[MAXPATH] = "";
 char StartDir[MAXPATH] = "";
 
-#include "c_commands.h"
+#include "c_comm~1.h"
 #include "c_cmdtab.h"
 
 typedef struct _CurPos {
