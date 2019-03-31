@@ -56,7 +56,7 @@ static GPipe Pipes[MAX_PIPES] = {
 
 
 
-#if defined(__DJGPP__)
+#if defined(__DJGPP__) || defined(WATCOM)
 
 // adapted from djgpp library source - redirects stderr as well as stdout
 // Original author: pacetti@fl-ngnet.army.mil
@@ -859,7 +859,7 @@ int ConContinue()
 }
 
 int GetPipeEvent(TEvent *Event) {
-#ifdef DJGPP
+#if defined(DJGPP) || defined(WATCOM)
     int i;
 
     Event->What = evNone;
@@ -1017,7 +1017,7 @@ static void PipeThread(void *p) {
 }
 
 int GUI::OpenPipe(char *Command, EModel *notify) {
-#ifdef DJGPP
+#if defined(DJGPP) || defined(WATCOM)
     int i;
 
     for (i = 0; i < MAX_PIPES; i++) {
@@ -1041,7 +1041,7 @@ int GUI::OpenPipe(char *Command, EModel *notify) {
 }
 
 int GUI::SetPipeView(int id, EModel *notify) {
-#ifdef DJGPP
+#if defined(DJGPP) || defined(WATCOM)
     if (id < 0 || id >= MAX_PIPES)
         return -1;
     if (Pipes[id].used == 0)
@@ -1053,7 +1053,7 @@ int GUI::SetPipeView(int id, EModel *notify) {
 }
 
 int GUI::ReadPipe(int id, void *buffer, int len) {
-#ifdef DJGPP
+#if defined(DJGPP) || defined(WATCOM)
     int rc;
     if (id < 0 || id >= MAX_PIPES)
         return -1;
@@ -1074,7 +1074,7 @@ int GUI::ReadPipe(int id, void *buffer, int len) {
 }
 
 int GUI::ClosePipe(int id) {
-#ifdef DJGPP
+#if defined(DJGPP) || defined(WATCOM)
     if (id < 0 || id >= MAX_PIPES)
         return -1;
     if (Pipes[id].used == 0)
