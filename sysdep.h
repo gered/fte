@@ -42,12 +42,16 @@
 #    error Target not supported.
 #endif
 
-#if defined(UNIX) || defined(DJGPP)
+#if defined(UNIX) || defined(DJGPP) || defined(WATCOM)
 #    define USE_DIRENT
 #endif
 
 #if defined(USE_DIRENT) // also needs fnmatch
+#ifdef WATCOM
+#    include <direct.h>
+#else
 #    include <dirent.h>
+#endif
 #endif
 
 #if defined(UNIX)
