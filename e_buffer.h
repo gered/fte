@@ -98,7 +98,7 @@ typedef struct _RoutineList {
 #endif
 
 #ifdef CONFIG_BOOKMARKS
-typedef struct {
+typedef struct _EBookmark {
     char *Name;
     EPoint BM;
 } EBookmark;
