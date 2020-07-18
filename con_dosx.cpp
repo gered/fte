@@ -1116,6 +1116,7 @@ int GUI::RunProgram(int mode, char *Command) {
 	ConQuerySize(&W, &H);
 	ConHideMouse();
 	ConSuspend();
+    ::ConClear();
 
 	if (*Command == 0)	// empty string = shell
 		Command = getenv(
