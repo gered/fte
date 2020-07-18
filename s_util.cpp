@@ -47,6 +47,15 @@ char *MakeBackup(char *FileName, char *NewName) {
     if (l <= 0)
         return NULL;
 
+// disabling this! it works great on any filesystem not restricted
+// to 8.3 filenames, but on DOS, it results in a backup filename being
+// creating that is not legal if the file extension is already 3 characters
+// long. this causes the checks here to work incorrectly. the end result of
+// all of that is that file saving with the 'KeepBackups' option DISABLED
+// results in your ORIGINAL file being deleted every time you save! ouch!
+// since i am building this fork specifically for use on DOS, it only makes
+// sense for me to keep the 8.3 DOS compatibility enabled anyway.
+#if 0
     /* try 1 */
     strcpy(NewName, FileName);
     strcat(NewName, "~");
@@ -57,12 +66,13 @@ char *MakeBackup(char *FileName, char *NewName) {
             return NewName;
         if (copyfile(FileName, NewName) == 0)
             return NewName;
-#if 0
+//#if 0
         if (errno == 2)
             return NewName; /* file not found */
-#endif
+//#endif
     }
-    
+#endif
+
     /* try 2: 8.3 */
     strcpy(NewName, FileName);
     NewName[l-1] = '~';
